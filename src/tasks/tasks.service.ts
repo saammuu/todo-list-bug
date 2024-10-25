@@ -17,27 +17,17 @@ export class TasksService {
     }
 
     async getTask(id: string) {
-        // const task = await this.tasksRepository
-        //     .createQueryBuilder('task')
-        //     .where(`task.id = "${id}"`)
-        //     .getOne();
-
-        // return task;
         const task = await this.tasksRepository
             .createQueryBuilder('task')
-            .leftJoinAndSelect('task.owner', 'owner') // Esto carga la relación "owner"
+            .leftJoinAndSelect('task.owner', 'owner')
             .where('task.id = :id', { id })
             .getOne();
 
         return task;
     }
 
-    //---
+
     async getTasksByUserId(userId: string) {
-        // const tasks = this.tasksRepository.find({
-        //     where: { owner: { id: userId } },
-        // });
-        // return tasks;
         return this.tasksRepository.find({
             where: {
                 owner: {
