@@ -9,7 +9,7 @@ export class UsersService {
     constructor(
         @InjectRepository(User)
         private readonly usersRepository: Repository<User>,
-    ) {}
+    ) { }
 
     async create(body: any) {
         const user = new User();
@@ -28,5 +28,11 @@ export class UsersService {
         });
 
         return user;
+    }
+
+    async listUsers() {
+        const users = await this.usersRepository.find();
+
+        return users;
     }
 }
