@@ -1,10 +1,14 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { IsPublic } from 'src/auth/is-public.decorator';
 
 @Controller('users')
+@UseGuards(AuthGuard)
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
+    @IsPublic()
     @Post('/create')
     async create(@Body() body) {
         return this.usersService.create(body);

@@ -14,7 +14,7 @@ export class UsersService {
     async create(body: any) {
         const user = new User();
         user.email = body.email;
-        user.pass = body.password;
+        user.pass = body.pass;
         user.fullname = body.fullname;
 
         await this.usersRepository.save(user);
