@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 
@@ -17,7 +17,7 @@ export class TasksController {
         const task = await this.tasksService.getTask(id);
 
         if (task.owner.id !== req.user.id) {
-            throw new UnauthorizedException('No tienes permiso para ver esta tarea');
+            throw new ForbiddenException('No tienes permiso para ver esta tarea');
         }
 
         return task;
@@ -28,7 +28,7 @@ export class TasksController {
         const task = await this.tasksService.getTask(body.id);
 
         if (task.owner.id !== req.user.id) {
-            throw new UnauthorizedException('No tienes permiso para editar esta tarea');
+            throw new ForbiddenException('No tienes permiso para editar esta tarea');
         }
         await this.tasksService.editTask(body);
         return this.tasksService.getTask(body.id);

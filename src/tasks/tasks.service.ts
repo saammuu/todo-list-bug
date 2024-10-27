@@ -1,48 +1,78 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from '../entities/task.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class TasksService {
+    private readonly logger = new Logger(TasksService.name);
     constructor(
         @InjectRepository(Task)
         private readonly tasksRepository: Repository<Task>,
     ) { }
 
     async listTasks() {
-        const tasks = await this.tasksRepository.find();
-
-        return tasks;
+        try {
+            this.logger.log('Listing all tasks');
+            const tasks = await this.tasksRepository.find();
+            return tasks;
+        } catch (error) {
+            this.logger.error('Error while listing tasks', error.stack);
+            throw new InternalServerErrorException('Error while listing tasks');
+        }
     }
 
     async getTask(id: string) {
-        const task = await this.tasksRepository
-            .createQueryBuilder('task')
-            .leftJoinAndSelect('task.owner', 'owner')
-            .where('task.id = :id', { id })
-            .getOne();
 
-        return task;
+        try {
+            this.logger.log(`Fetching task with ID: ${id}`);
+            const task = await this.tasksRepository
+                .createQueryBuilder('task')
+                .leftJoinAndSelect('task.owner', 'owner')
+                .where('task.id = :id', { id })
+                .getOne();
+            if (!task) {
+                this.logger.warn(`Task not found with ID: ${id}`);
+                throw new NotFoundException(`Task Not Found`);
+            }
+            return task;
+        } catch (error) {
+            this.logger.error('Error while fetching task', error.stack);
+            throw new InternalServerErrorException('Error while listing task')
+        }
     }
 
 
     async getTasksByUserId(userId: string) {
-        return this.tasksRepository.find({
-            where: {
-                owner: {
-                    id: userId,
+        try {
+            this.logger.log(`Listing tasks for user ID: ${userId}`);
+            return await this.tasksRepository.find({
+                where: {
+                    owner: {
+                        id: userId,
+                    },
                 },
-            },
-            relations: ['owner'],
-        });
+                relations: ['owner'],
+            });
+        } catch (error) {
+            this.logger.error('Error while listing tasks by user ID', error.stack);
+            throw new InternalServerErrorException('Error while listing tasks by user ID')
+        }
+
     }
 
     async editTask(body: any) {
-        await this.tasksRepository.update(body.id, body);
+        try {
+            this.logger.log(`Editing task with ID: ${body.id}`);
+            await this.tasksRepository.update(body.id, body);
+            const editedTask = await this.getTask(body.id);
+            this.logger.log(`Task edited successfully: ${editedTask.id}`);
+            return editedTask;
+        } catch (error) {
+            this.logger.error('Error while editing task', error.stack);
+            throw new InternalServerErrorException('Error while editing task');
+        }
 
-        const editedTask = await this.getTask(body.id);
 
-        return editedTask;
     }
 }
