@@ -1,6 +1,7 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { TaskDto } from 'src/dto/task.dto';
 
 @Controller('tasks')
 @UseGuards(AuthGuard)
@@ -33,4 +34,15 @@ export class TasksController {
         await this.tasksService.editTask(body);
         return this.tasksService.getTask(body.id);
     }
+
+    @Post('/create')
+    async createTask(@Body() taskDto: TaskDto, @Request() req) {
+        try {
+            return await this.tasksService.createTask(taskDto, req.user.id);
+        } catch (error) {
+            throw new BadRequestException('Invalid task data');
+        }
+    }
+
+
 }

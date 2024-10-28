@@ -1,7 +1,9 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from '../entities/task.entity';
 import { Repository } from 'typeorm';
+import { TaskDto } from 'src/dto/task.dto';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -74,5 +76,21 @@ export class TasksService {
         }
 
 
+    }
+
+
+    async createTask(taskDto: TaskDto, userId: string) {
+        try {
+            const newTask = this.tasksRepository.create(taskDto);
+            newTask.owner = { id: userId } as User;
+
+            await this.tasksRepository.save(newTask);
+
+            this.logger.log(`Task created with title: ${newTask.title} for user ID: ${userId}`);
+            return newTask;
+        } catch (error) {
+            this.logger.error('Failed to create task', error.stack);
+            throw new BadRequestException('Task creation failed due to invalid data');
+        }
     }
 }
